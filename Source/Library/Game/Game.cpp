@@ -8,6 +8,8 @@ namespace library
     /*--------------------------------------------------------------------
       TODO: Initialize global variables (remove the comment)
     --------------------------------------------------------------------*/
+    #pragma comment( lib, "d3d11.lib" )
+    
     HINSTANCE g_hInstance = nullptr;
     HWND g_hWnd = nullptr;
 
@@ -85,9 +87,9 @@ namespace library
         g_hWnd = CreateWindowEx(
             0,
             CLASS_NAME,
-            L"Direct3D 11 Tutorial 1: Direct3D 11 Basics",
+            L"Game Graphics Programming Lab 01: Direct3D 11 Basics",
             WS_OVERLAPPEDWINDOW,
-            CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+            CW_USEDEFAULT, CW_USEDEFAULT, rc.right-rc.left, rc.bottom-rc.top,
             NULL,
             NULL,
             hInstance,
