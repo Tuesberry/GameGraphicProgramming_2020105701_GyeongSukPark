@@ -8,8 +8,6 @@ namespace library
     /*--------------------------------------------------------------------
       TODO: Initialize global variables (remove the comment)
     --------------------------------------------------------------------*/
-    #pragma comment( lib, "d3d11.lib" )
-    
     HINSTANCE g_hInstance = nullptr;
     HWND g_hWnd = nullptr;
 
