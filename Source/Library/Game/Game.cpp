@@ -12,12 +12,11 @@ namespace library
 	/*--------------------------------------------------------------------
 	  TODO: Game::Game definition (remove the comment)
 	--------------------------------------------------------------------*/
-	Game::Game(_In_ PCWSTR pszGameName)
-	{
-		m_pszGameName = pszGameName;
-		m_mainWindow = std::make_unique<library::MainWindow>();
-		m_renderer = std::make_unique<library::Renderer>();
-	}
+	Game::Game(_In_ PCWSTR pszGameName):
+		m_pszGameName(pszGameName),
+		m_mainWindow(std::make_unique<library::MainWindow>()),
+		m_renderer(std::make_unique<library::Renderer>())
+	{}
 	/*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
 	  Method:   Game::Initialize
 	  Summary:  Initializes the components of the game

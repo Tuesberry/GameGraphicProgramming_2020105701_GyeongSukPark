@@ -12,18 +12,17 @@ namespace library
     /*--------------------------------------------------------------------
       TODO: Renderer::Renderer definition (remove the comment)
     --------------------------------------------------------------------*/
-    Renderer::Renderer()
-    {
-        m_driverType = D3D_DRIVER_TYPE_NULL;
-        m_featureLevel = D3D_FEATURE_LEVEL_11_0;
-        m_d3dDevice = nullptr;
-        m_d3dDevice1 = nullptr;
-        m_immediateContext = nullptr;
-        m_immediateContext1 = nullptr;
-        m_swapChain = nullptr;
-        m_swapChain1 = nullptr;
-        m_renderTargetView = nullptr;
-    }
+    Renderer::Renderer():
+        m_driverType(D3D_DRIVER_TYPE_NULL),
+        m_featureLevel(D3D_FEATURE_LEVEL_11_0),
+        m_d3dDevice(nullptr),
+        m_d3dDevice1(nullptr),
+        m_immediateContext(nullptr),
+        m_immediateContext1(nullptr),
+        m_swapChain(nullptr),
+        m_swapChain1(nullptr),
+        m_renderTargetView(nullptr)
+    {}
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderer::Initialize
       Summary:  Creates Direct3D device and swap chain
@@ -84,16 +83,12 @@ namespace library
             }
 
             if (SUCCEEDED(hr))
+            {
                 break;
+            }
         }
         if (FAILED(hr))
         {
-            MessageBox(
-                nullptr,
-                L"Call to Create Device failed!",
-                L"Game Graphics Programming",
-                NULL
-            );
             return hr;
         }
             
@@ -117,12 +112,6 @@ namespace library
         }
         if (FAILED(hr))
         {
-            MessageBox(
-                nullptr,
-                L"Obtain DXGI factory failed!",
-                L"Game Graphics Programming",
-                NULL
-            );
             return hr;
         }
 
@@ -183,12 +172,6 @@ namespace library
 
         if (FAILED(hr))
         {
-            MessageBox(
-                nullptr,
-                L"Create Swap Chain failed!",
-                L"Game Graphics Programming",
-                NULL
-            );
             return hr;
         }
 
@@ -198,12 +181,6 @@ namespace library
 
         if (FAILED(hr))
         {
-            MessageBox(
-                nullptr,
-                L"GetBuffer failed!",
-                L"Game Graphics Programming",
-                NULL
-            );
             return hr;
         }
 
@@ -212,12 +189,6 @@ namespace library
 
         if (FAILED(hr))
         {
-            MessageBox(
-                nullptr,
-                L"Create a Render Target View failed!",
-                L"Game Graphics Programming",
-                NULL
-            );
             return hr;
         }
 

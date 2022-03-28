@@ -121,12 +121,11 @@ namespace library
       TODO: BaseWindow<DerivedType>::BaseWindow definition (remove the comment)
     --------------------------------------------------------------------*/
     template <class DerivedType>
-    BaseWindow<DerivedType>::BaseWindow()
-    {
-        m_hInstance = nullptr;
-        m_hWnd = nullptr;
-        m_pszWindowName = PSZ_COURSE_TITLE;
-    }
+    BaseWindow<DerivedType>::BaseWindow():
+        m_hInstance(nullptr),
+        m_hWnd(nullptr), 
+        m_pszWindowName(PSZ_COURSE_TITLE)
+    {}
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
         Method:   BaseWindow<DerivedType>::GetWindow()
         Summary:  Returns the handle to the window
