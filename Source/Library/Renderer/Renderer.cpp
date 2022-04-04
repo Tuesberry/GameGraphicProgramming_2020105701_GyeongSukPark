@@ -141,14 +141,17 @@ namespace library
                 hr = m_immediateContext.As(&m_immediateContext1);
             }
 
-            DXGI_SWAP_CHAIN_DESC1 sd = {};
-            sd.Width = width;
-            sd.Height = height;
-            sd.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            sd.SampleDesc.Count = 1;
-            sd.SampleDesc.Quality = 0;
-            sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-            sd.BufferCount = 1;
+            DXGI_SWAP_CHAIN_DESC1 sd = {
+                .Width = width,
+                .Height = height,
+                .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                .SampleDesc = {
+                    .Count = 1, 
+                    .Quality = 0
+                },
+                .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
+                .BufferCount = 1
+            };
 
             hr = dxgiFactory2->CreateSwapChainForHwnd(m_d3dDevice.Get(), hWnd, &sd, nullptr, nullptr, m_swapChain1.GetAddressOf());
             if (SUCCEEDED(hr))
@@ -161,18 +164,25 @@ namespace library
         else
         {
             // DirectX 11.0 systems
-            DXGI_SWAP_CHAIN_DESC sd = {};
-            sd.BufferCount = 1;
-            sd.BufferDesc.Width = width;
-            sd.BufferDesc.Height = height;
-            sd.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-            sd.BufferDesc.RefreshRate.Numerator = 60;
-            sd.BufferDesc.RefreshRate.Denominator = 1;
-            sd.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-            sd.OutputWindow = hWnd;
-            sd.SampleDesc.Count = 1;
-            sd.SampleDesc.Quality = 0;
-            sd.Windowed = TRUE;
+            DXGI_SWAP_CHAIN_DESC sd = {
+                .BufferDesc = {
+                    .Width = width,
+                    .Height = height,
+                    .RefreshRate = {
+                        .Numerator = 60,
+                        .Denominator = 1
+                    },
+                    .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                },
+                .SampleDesc = {
+                    .Count = 1,
+                    .Quality = 0
+                },
+                .BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT,
+                .BufferCount = 1,
+                .OutputWindow = hWnd,
+                .Windowed = TRUE
+            };
 
             hr = dxgiFactory->CreateSwapChain(m_d3dDevice.Get(), &sd, m_swapChain.GetAddressOf());
         }
@@ -207,13 +217,14 @@ namespace library
         m_immediateContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), nullptr);
 
         // setup the viewport
-        D3D11_VIEWPORT vp;
-        vp.TopLeftX = 0.0f;
-        vp.TopLeftY = 0.0f;
-        vp.Width = (float)width;
-        vp.Height = (float)height;
-        vp.MinDepth = 0.0f;
-        vp.MaxDepth = 1.0f;
+        D3D11_VIEWPORT vp = {
+            .TopLeftX = 0.0f,
+            .TopLeftY = 0.0f,
+            .Width = (float)width,
+            .Height = (float)height,
+            .MinDepth = 0.0f,
+            .MaxDepth = 1.0f,
+        };
         m_immediateContext->RSSetViewports(1, &vp);
 
         // compile the vertex shader

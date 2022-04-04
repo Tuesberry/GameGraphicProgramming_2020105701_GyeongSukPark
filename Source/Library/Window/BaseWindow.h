@@ -189,20 +189,21 @@ namespace library
     )
     {
         // Register the window class
-        WNDCLASSEX wcex;
-        wcex.cbSize = sizeof(WNDCLASSEX);
-        wcex.style = CS_HREDRAW | CS_VREDRAW;
-        wcex.lpfnWndProc = WindowProc;
-        wcex.cbClsExtra = 0;
-        wcex.cbWndExtra = 0;
-        wcex.hInstance = hInstance;
-        wcex.hIcon = LoadIcon(hInstance, (LPCTSTR)IDI_TUTORIAL1);
-        wcex.hCursor = LoadCursor(nullptr, IDC_ARROW);
-        wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-        wcex.lpszMenuName = nullptr;
-        wcex.lpszClassName = GetWindowClassName();
-        wcex.hIconSm = LoadIcon(wcex.hInstance, (LPCTSTR)IDI_TUTORIAL1);
-
+        WNDCLASSEX wcex = {
+            .cbSize = sizeof(WNDCLASSEX),
+            .style = CS_HREDRAW | CS_VREDRAW,
+            .lpfnWndProc = WindowProc,
+            .cbClsExtra = 0,
+            .cbWndExtra = 0,
+            .hInstance = hInstance,
+            .hIcon = LoadIcon(hInstance, (LPCTSTR)IDI_TUTORIAL1),
+            .hCursor = LoadCursor(nullptr, IDC_ARROW),
+            .hbrBackground = (HBRUSH)(COLOR_WINDOW + 1),
+            .lpszMenuName = nullptr,
+            .lpszClassName = GetWindowClassName(),
+            .hIconSm = LoadIcon(wcex.hInstance, (LPCTSTR)IDI_TUTORIAL1)
+        };
+ 
         if (!RegisterClassEx(&wcex))
         {
             DWORD dwError = GetLastError();
