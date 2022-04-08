@@ -93,6 +93,9 @@ namespace library
 
                 // update the renderer
                 m_renderer->Update(elapsedTime);
+
+                QueryPerformanceCounter(&startTime);
+
                 // renderer updates the renderables
                 m_renderer->Render();
             }

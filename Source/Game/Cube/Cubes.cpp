@@ -8,7 +8,7 @@
 M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
 void EarthCube::Update(_In_ FLOAT deltaTime)
 {
-	m_world = XMMatrixRotationY(deltaTime);
+	RotateY(deltaTime);
 }
 
 /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
@@ -19,8 +19,9 @@ void EarthCube::Update(_In_ FLOAT deltaTime)
 M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
 void MoonCube::Update(_In_ FLOAT deltaTime)
 {
-	XMMATRIX mSpin = XMMatrixRotationZ(deltaTime * -1.0f);
-	XMMATRIX mOrbit = XMMatrixRotationY(deltaTime * -2.0f);
+	elapsedTime += deltaTime;
+	XMMATRIX mSpin = XMMatrixRotationZ(elapsedTime * -1.0f);
+	XMMATRIX mOrbit = XMMatrixRotationY(elapsedTime * -2.0f);
 	XMMATRIX mTranslate = XMMatrixTranslation(-4.0f, 0.0f, 0.0f);
 	XMMATRIX mScale = XMMatrixScaling(0.3f, 0.3f, 0.3f);
 	m_world = mScale * mSpin * mTranslate * mOrbit;
