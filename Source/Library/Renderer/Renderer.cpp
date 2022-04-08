@@ -25,11 +25,6 @@ namespace library
         , m_renderTargetView(nullptr)
         , m_depthStencil(nullptr)
         , m_depthStencilView(nullptr)
-        , m_projection()
-        , m_view()
-        , m_renderables(std::unordered_map<PCWSTR, std::shared_ptr<Renderable>>())
-        , m_vertexShaders(std::unordered_map<PCWSTR, std::shared_ptr<VertexShader>>())
-        , m_pixelShaders(std::unordered_map<PCWSTR, std::shared_ptr<PixelShader>>())
     {
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
@@ -269,8 +264,8 @@ namespace library
         XMVECTOR at = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         m_view = XMMatrixLookAtLH(eye, at, up);
-        m_projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, (float)width / (float)height, 0.01f, 100.0f);
-                                              
+        m_projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, width / (FLOAT)height, 0.01f, 100.0f);
+                                                // 파이로 변경!
         // initalize the shaders, then the renderables
         for (auto iVShader = m_vertexShaders.begin(); iVShader != m_vertexShaders.end(); iVShader++)
         {
@@ -326,15 +321,16 @@ namespace library
             // key already exists
             return E_FAIL;
         }
-
-        // add the renderable
-        m_renderables.insert(std::make_pair(pszRenderableName, renderable));
-
-        return S_OK;
+        else
+        {
+            // add the renderable
+            m_renderables.insert(std::make_pair(pszRenderableName, renderable));
+            return S_OK;
+        }  
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderer::AddVertexShader
-      Summary:  Add the vertex shader into the renderer
+      Summary:  Add the vertex shader into the renderer and initialize it
       Args:     PCWSTR pszVertexShaderName
                   Key of the vertex shader
                 const std::shared_ptr<VertexShader>&
@@ -354,15 +350,16 @@ namespace library
             // key already exists
             return E_FAIL;
         }
-
-        // add the vertex shader
-        m_vertexShaders.insert(std::make_pair(pszVertexShaderName, vertexShader));
-
-        return S_OK;
+        else
+        {
+            // add the vertex shader
+            m_vertexShaders.insert(std::make_pair(pszVertexShaderName, vertexShader));
+            return S_OK;
+        }
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderer::AddPixelShader
-      Summary:  Add the pixel shader into the renderer 
+      Summary:  Add the pixel shader into the renderer and initialize it
       Args:     PCWSTR pszPixelShaderName
                   Key of the pixel shader
                 const std::shared_ptr<PixelShader>&
@@ -382,11 +379,12 @@ namespace library
             // key already exists
             return E_FAIL;
         }
-
-        // add the pixel shader
-        m_pixelShaders.insert(std::make_pair(pszPixelShaderName, pixelShader));
-
-        return S_OK;
+        else
+        {
+            // add the pixel shader
+            m_pixelShaders.insert(std::make_pair(pszPixelShaderName, pixelShader));
+            return S_OK;
+        }
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderer::Update

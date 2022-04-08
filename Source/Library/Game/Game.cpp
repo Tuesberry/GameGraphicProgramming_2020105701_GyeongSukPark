@@ -70,7 +70,6 @@ namespace library
     {
         LARGE_INTEGER countsPerSecond, startTime, stopTime;
         float elapsedTime;
-
         MSG msg = { 0 };
 
         QueryPerformanceFrequency(&countsPerSecond);
