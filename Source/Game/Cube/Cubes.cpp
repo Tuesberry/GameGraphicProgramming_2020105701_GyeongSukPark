@@ -20,6 +20,10 @@ M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
 void MoonCube::Update(_In_ FLOAT deltaTime)
 {
 	elapsedTime += deltaTime;
+	if (elapsedTime >= XM_2PI)
+	{
+		elapsedTime -= XM_2PI;
+	}
 	XMMATRIX mSpin = XMMatrixRotationZ(elapsedTime * -1.0f);
 	XMMATRIX mOrbit = XMMatrixRotationY(elapsedTime * -2.0f);
 	XMMATRIX mTranslate = XMMatrixTranslation(-4.0f, 0.0f, 0.0f);
