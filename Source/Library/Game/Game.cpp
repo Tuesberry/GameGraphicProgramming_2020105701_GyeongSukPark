@@ -91,9 +91,12 @@ namespace library
                 elapsedTime = (float)(stopTime.QuadPart - startTime.QuadPart);
                 elapsedTime /= (float)countsPerSecond.QuadPart;
 
+                // handle input
+                m_renderer->HandleInput(m_mainWindow->GetDirections(), m_mainWindow->GetMouseRelativeMovement(), elapsedTime);
+                m_mainWindow->ResetMouseMovement();
+
                 // update the renderer
                 m_renderer->Update(elapsedTime);
-
                 QueryPerformanceCounter(&startTime);
 
                 // renderer updates the renderables

@@ -4,7 +4,7 @@
              base class of all windows used in the library.
   Classes: BaseWindow<DerivedType>
   Functions: InitWindow, InitDevice
-  © 2022 Kyung Hee University
+  � 2022 Kyung Hee University
 ===================================================================+*/
 #pragma once
 
@@ -20,13 +20,19 @@ namespace library
       Methods:  Initialize
                   Initializes window
                 GetWindowClassName
-                    Returns the name of the window class
+                  Returns the name of the window class
                 HandleMessage
-                    Handles the messages
+                  Handles the messages
+                GetDirections
+                  Returns the keyboard direction input
+                GetMouseRelativeMovement
+                  Returns the mouse relative movement
+                ResetMouseMovement
+                  Reset the mouse relative movement to zero
                 MainWindow
-                    Constructor.
+                  Constructor.
                 ~MainWindow
-                    Destructor.
+                  Destructor.
     C---C---C---C---C---C---C---C---C---C---C---C---C---C---C---C---C-C*/
     class MainWindow : public BaseWindow<MainWindow>
     {
@@ -41,5 +47,13 @@ namespace library
         HRESULT Initialize(_In_ HINSTANCE hInstance, _In_ INT nCmdShow, _In_ PCWSTR pszWindowName) override;
         PCWSTR GetWindowClassName() const override;
         LRESULT HandleMessage(_In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam) override;
+
+        const DirectionsInput& GetDirections() const;
+        const MouseRelativeMovement& GetMouseRelativeMovement() const;
+        void ResetMouseMovement();
+
+    private:
+        DirectionsInput m_directions;
+        MouseRelativeMovement m_mouseRelativeMovement;
     };
 }

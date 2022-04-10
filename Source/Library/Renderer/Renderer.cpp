@@ -26,7 +26,7 @@ namespace library
         , m_depthStencil(nullptr)
         , m_depthStencilView(nullptr)
         , m_projection()
-        , m_view()
+        , m_camera(XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f))
         , m_renderables(std::unordered_map<PCWSTR, std::shared_ptr<Renderable>>())
         , m_vertexShaders(std::unordered_map<PCWSTR, std::shared_ptr<VertexShader>>())
         , m_pixelShaders(std::unordered_map<PCWSTR, std::shared_ptr<PixelShader>>())
@@ -265,10 +265,13 @@ namespace library
         m_immediateContext->RSSetViewports(1, &vp);
 
         // initalize view matrix and the projection matrix
+        /*
         XMVECTOR eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
         XMVECTOR at = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
         m_view = XMMatrixLookAtLH(eye, at, up);
+        */
+
         m_projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, (float)width / (float)height, 0.01f, 100.0f);
                                               
         // initalize the shaders, then the renderables
@@ -389,6 +392,22 @@ namespace library
         return S_OK;
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+      Method:   Renderer::HandleInput
+      Summary:  Add the pixel shader into the renderer and initialize it
+      Args:     const DirectionsInput& directions
+                  Data structure containing keyboard input data
+                const MouseRelativeMovement& mouseRelativeMovement
+                  Data structure containing mouse relative input data
+      Modifies: [m_camera].
+    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    /*--------------------------------------------------------------------
+      TODO: Renderer::HandleInput definition (remove the comment)
+    --------------------------------------------------------------------*/
+    void Renderer::HandleInput(_In_ const DirectionsInput& directions, _In_ const MouseRelativeMovement& mouseRelativeMovement, _In_ FLOAT deltaTime)
+    {
+        m_camera.HandleInput(directions, mouseRelativeMovement, deltaTime);
+    }
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderer::Update
       Summary:  Update the renderables each frame
       Args:     FLOAT deltaTime
@@ -399,10 +418,14 @@ namespace library
     --------------------------------------------------------------------*/
     void Renderer::Update(_In_ FLOAT deltaTime)
     {
+        // update renderable
         for (auto iRenderable = m_renderables.begin(); iRenderable != m_renderables.end(); iRenderable++)
         {
             iRenderable->second->Update(deltaTime);
         }
+
+        // update camera
+        m_camera.Update(deltaTime);
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderer::Render
@@ -434,7 +457,7 @@ namespace library
             // update constant buffer
             ConstantBuffer cb = {
                 .World = XMMatrixTranspose(iRenderable->second->GetWorldMatrix()),
-                .View = XMMatrixTranspose(m_view),
+                .View = XMMatrixTranspose(m_camera.GetView()),
                 .Projection = XMMatrixTranspose(m_projection)
             };
             m_immediateContext->UpdateSubresource(iRenderable->second->GetConstantBuffer().Get(), 0, nullptr, &cb, 0, 0);

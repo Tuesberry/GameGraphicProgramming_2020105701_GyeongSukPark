@@ -37,6 +37,12 @@
     <Filter Include="Header Files\Shader">
       <UniqueIdentifier>{0f5653ab-15b9-45f1-9c7c-32cd6f0d6ba3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Camera">
+      <UniqueIdentifier>{ac964583-53bc-4458-9859-fc6835b132d7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Camera">
+      <UniqueIdentifier>{33caa56e-ad04-490d-bfb7-63d8cfc48471}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Common.h">
@@ -72,6 +78,9 @@
     <ClInclude Include="Shader\VertexShader.h">
       <Filter>Header Files\Shader</Filter>
     </ClInclude>
+    <ClInclude Include="Camera\Camera.h">
+      <Filter>Header Files\Camera</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Game\Game.cpp">
@@ -94,6 +103,9 @@
     </ClCompile>
     <ClCompile Include="Shader\VertexShader.cpp">
       <Filter>Source Files\Shader</Filter>
+    </ClCompile>
+    <ClCompile Include="Camera\Camera.cpp">
+      <Filter>Source Files\Camera</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
