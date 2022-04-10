@@ -139,9 +139,6 @@ namespace library
             case 0x44 : // d
                 m_directions.bRight = true;
                 return 0;
-            case VK_ESCAPE:
-                PostQuitMessage(0);
-                return 0;
             default:
                 return 0;
             }

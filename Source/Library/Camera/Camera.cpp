@@ -155,8 +155,14 @@ namespace library
         m_yaw += (float)mouseRelativeMovement.X * m_rotationSpeed * deltaTime;
         
         // pitch must be in a range of(-pi/2, pi/2)
-        m_pitch = std::clamp(m_pitch, -XM_PIDIV2 + 0.0001f, XM_PIDIV2 - 0.0001f);
-        
+        if (m_pitch < -XM_PIDIV2 + 0.0001f)
+        {
+            m_pitch = -XM_PIDIV2 + 0.0001f;
+        }
+        else if (m_pitch > XM_PIDIV2 - 0.0001f)
+        {
+            m_pitch = XM_PIDIV2 - 0.0001f;
+        }        
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Camera::Update

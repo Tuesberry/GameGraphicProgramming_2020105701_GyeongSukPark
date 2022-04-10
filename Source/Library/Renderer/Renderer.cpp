@@ -25,7 +25,7 @@ namespace library
         , m_renderTargetView(nullptr)
         , m_depthStencil(nullptr)
         , m_depthStencilView(nullptr)
-        , m_projection()
+        , m_projection(XMMatrixIdentity())
         , m_camera(XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f))
         , m_renderables(std::unordered_map<PCWSTR, std::shared_ptr<Renderable>>())
         , m_vertexShaders(std::unordered_map<PCWSTR, std::shared_ptr<VertexShader>>())
@@ -264,14 +264,7 @@ namespace library
         };
         m_immediateContext->RSSetViewports(1, &vp);
 
-        // initalize view matrix and the projection matrix
-        /*
-        XMVECTOR eye = XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f);
-        XMVECTOR at = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-        XMVECTOR up = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-        m_view = XMMatrixLookAtLH(eye, at, up);
-        */
-
+        // initalize the projection matrix
         m_projection = XMMatrixPerspectiveFovLH(XM_PIDIV2, (float)width / (float)height, 0.01f, 100.0f);
                                               
         // initalize the shaders, then the renderables
