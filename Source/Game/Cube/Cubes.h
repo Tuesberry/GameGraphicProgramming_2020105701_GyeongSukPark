@@ -55,3 +55,27 @@ public:
 private:
 	float elapsedTime = 0.0f;
 };
+
+/*C+C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C
+  Class:    CustomCube
+
+  Summary:  Custom Cube class 
+
+  Methods:  Update
+			  Orbits around the origin with 2.0 as the orbit radius
+			  rotates around the z-axis and scale changing
+			CustomCube
+			  Constructor
+			~CustomCube
+			  Destructor
+C---C---C---C---C---C---C---C---C---C---C---C---C---C---C---C---C-C*/
+class CustomCube : public BaseCube
+{
+public:
+	CustomCube() = default;
+	~CustomCube() = default;
+	void Update(_In_ FLOAT deltaTime) override;
+private:
+	float elapsedTime = 0.0f;
+	bool bIncreaseSize = true;
+};
