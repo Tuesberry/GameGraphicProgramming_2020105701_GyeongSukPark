@@ -30,7 +30,10 @@
     <ClCompile Include="Cube\BaseCube.cpp">
       <Filter>Source Files\Cube</Filter>
     </ClCompile>
-    <ClCompile Include="Cube\Cubes.cpp">
+    <ClCompile Include="Cube\Cube.cpp">
+      <Filter>Source Files\Cube</Filter>
+    </ClCompile>
+    <ClCompile Include="Cube\CustomCube.cpp">
       <Filter>Source Files\Cube</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,7 +41,10 @@
     <ClInclude Include="Cube\BaseCube.h">
       <Filter>Header Files\Cube</Filter>
     </ClInclude>
-    <ClInclude Include="Cube\Cubes.h">
+    <ClInclude Include="Cube\Cube.h">
+      <Filter>Header Files\Cube</Filter>
+    </ClInclude>
+    <ClInclude Include="Cube\CustomCube.h">
       <Filter>Header Files\Cube</Filter>
     </ClInclude>
   </ItemGroup>

@@ -99,12 +99,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Cube\BaseCube.cpp" />
-    <ClCompile Include="Cube\Cubes.cpp" />
+    <ClCompile Include="Cube\Cube.cpp" />
+    <ClCompile Include="Cube\CustomCube.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cube\BaseCube.h" />
-    <ClInclude Include="Cube\Cubes.h" />
+    <ClInclude Include="Cube\Cube.h" />
+    <ClInclude Include="Cube\CustomCube.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Shaders\PS.hlsl" />
