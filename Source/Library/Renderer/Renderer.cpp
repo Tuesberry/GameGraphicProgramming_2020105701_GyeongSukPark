@@ -33,7 +33,8 @@ namespace library
         , m_renderables(std::unordered_map<std::wstring, std::shared_ptr<Renderable>>())
         , m_vertexShaders(std::unordered_map<std::wstring, std::shared_ptr<VertexShader>>())
         , m_pixelShaders(std::unordered_map<std::wstring, std::shared_ptr<PixelShader>>())
-        , m_padding()
+        , m_aPointLights{}
+        , m_cbLights(nullptr)
     {
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
@@ -323,6 +324,23 @@ namespace library
             return hr;
         }
 
+        // create the light constant buffer
+        D3D11_BUFFER_DESC lightCbDesc =
+        {
+            .ByteWidth = sizeof(CBLights),
+            .Usage = D3D11_USAGE_DEFAULT,
+            .BindFlags = D3D11_BIND_CONSTANT_BUFFER,
+            .CPUAccessFlags = 0,
+            .MiscFlags = 0,
+            .StructureByteStride = 0
+        };
+
+        hr = m_d3dDevice->CreateBuffer(&lightCbDesc, nullptr, m_cbLights.GetAddressOf());
+        if (FAILED(hr))
+        {
+            return hr;
+        }
+
         // set projection constant buffer
         CBChangeOnResize cbProjection = {
             .Projection = XMMatrixTranspose(m_projection)
@@ -358,6 +376,29 @@ namespace library
         // add the renderable
         m_renderables.insert(std::make_pair(pszRenderableName, renderable));
 
+        return S_OK;
+    }
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+      Method:   Renderer::AddPointLight
+      Summary:  Add a point light
+      Args:     size_t index
+                  Index of the point light
+                const std::shared_ptr<PointLight>& pointLight
+                  Shared pointer to the point light object
+      Modifies: [m_aPointLights].
+      Returns:  HRESULT
+                  Status code.
+    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    /*--------------------------------------------------------------------
+      TODO: Renderer::AddPointLight definition (remove the comment)
+    --------------------------------------------------------------------*/
+    HRESULT Renderer::AddPointLight(_In_ size_t index, _In_ const std::shared_ptr<PointLight>& pPointLight)
+    {
+        if (index >= NUM_LIGHTS)
+        {
+            return E_FAIL;
+        }
+        m_aPointLights[index] = pPointLight;
         return S_OK;
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
@@ -448,7 +489,11 @@ namespace library
         {
             iRenderable->second->Update(deltaTime);
         }
-
+        // update the lights
+        for (auto light : m_aPointLights)
+        {
+            light.get()->Update(deltaTime);
+        }
         // update camera
         m_camera.Update(deltaTime);
     }
@@ -466,10 +511,24 @@ namespace library
         // clear the depth buffer to 1.0 (maximum depth)
         m_immediateContext->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
         // create camera constant buffer and update
+        XMFLOAT4 camPosition;
+        XMStoreFloat4(&camPosition, m_camera.GetEye());
         CBChangeOnCameraMovement cbView = {
-                .View = XMMatrixTranspose(m_camera.GetView())
+                .View = XMMatrixTranspose(m_camera.GetView()),
+                .CameraPosition = camPosition
         };
         m_immediateContext->UpdateSubresource(m_camera.GetConstantBuffer().Get(), 0, nullptr, &cbView, 0, 0);
+        // update the lights constant buffer
+        CBLights cbLight = {
+            .LightPositions = {},
+            .LightColors = {}
+        };
+        for (int lightIndex = 0; lightIndex < NUM_LIGHTS; lightIndex++)
+        {
+            cbLight.LightPositions[lightIndex] = m_aPointLights[lightIndex].get()->GetPosition();
+            cbLight.LightColors[lightIndex] = m_aPointLights[lightIndex].get()->GetColor();
+        }
+        m_immediateContext->UpdateSubresource(m_cbLights.Get(), 0, nullptr, &cbLight, 0, 0);
         // for each rendererables
         for (auto iRenderable = m_renderables.begin(); iRenderable != m_renderables.end(); iRenderable++)
         {
@@ -484,9 +543,10 @@ namespace library
             // set input layout
             m_immediateContext->IASetInputLayout(iRenderable->second->GetVertexLayout().Get());
 
-            // update constant buffer 
+            // update the renderable constant buffer 
             CBChangesEveryFrame cbWorld = {
-                .World = XMMatrixTranspose(iRenderable->second->GetWorldMatrix())
+                .World = XMMatrixTranspose(iRenderable->second->GetWorldMatrix()),
+                .OutputColor = iRenderable->second->GetOutputColor()
             };
             m_immediateContext->UpdateSubresource(iRenderable->second->GetConstantBuffer().Get(), 0, nullptr, &cbWorld, 0, 0);
 
@@ -495,14 +555,19 @@ namespace library
             m_immediateContext->VSSetConstantBuffers(0, 1, m_camera.GetConstantBuffer().GetAddressOf());
             m_immediateContext->VSSetConstantBuffers(1, 1, m_cbChangeOnResize.GetAddressOf());
             m_immediateContext->VSSetConstantBuffers(2, 1, iRenderable->second->GetConstantBuffer().GetAddressOf());
+            m_immediateContext->PSSetConstantBuffers(3, 1, m_cbLights.GetAddressOf());
+            m_immediateContext->PSSetConstantBuffers(0, 1, m_camera.GetConstantBuffer().GetAddressOf());
+            m_immediateContext->PSSetConstantBuffers(2, 1, iRenderable->second->GetConstantBuffer().GetAddressOf());
             m_immediateContext->PSSetShader(iRenderable->second->GetPixelShader().Get(), nullptr, 0);
 
-            // set texture resource view
-            m_immediateContext->PSSetShaderResources(0, 1, iRenderable->second->GetTextureResourceView().GetAddressOf());
-
-            // set sampler state
-            m_immediateContext->PSSetSamplers(0, 1, iRenderable->second->GetSamplerState().GetAddressOf());
-
+            if (iRenderable->second->HasTexture())
+            {
+                // set texture resource view
+                m_immediateContext->PSSetShaderResources(0, 1, iRenderable->second->GetTextureResourceView().GetAddressOf());
+                // set sampler state
+                m_immediateContext->PSSetSamplers(0, 1, iRenderable->second->GetSamplerState().GetAddressOf());
+            }
+            
             // draw
             m_immediateContext->DrawIndexed(iRenderable->second->GetNumIndices(), 0, 0);
         }
