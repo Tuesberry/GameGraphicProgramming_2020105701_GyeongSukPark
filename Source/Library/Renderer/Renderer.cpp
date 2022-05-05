@@ -559,7 +559,7 @@ namespace library
             m_immediateContext->PSSetConstantBuffers(0, 1, m_camera.GetConstantBuffer().GetAddressOf());
             m_immediateContext->PSSetConstantBuffers(2, 1, iRenderable->second->GetConstantBuffer().GetAddressOf());
             m_immediateContext->PSSetShader(iRenderable->second->GetPixelShader().Get(), nullptr, 0);
-
+            /*
             if (iRenderable->second->HasTexture())
             {
                 // set texture resource view
@@ -567,9 +567,26 @@ namespace library
                 // set sampler state
                 m_immediateContext->PSSetSamplers(0, 1, iRenderable->second->GetSamplerState().GetAddressOf());
             }
+            */
+            if (iRenderable->second->HasTexture())
+            {
+                // for each meshes
+                for (UINT i = 0u; i < iRenderable->second->GetNumMeshes(); ++i)
+                {
+                    UINT iMaterial = iRenderable->second->GetMesh(i).uMaterialIndex;
+                    //get the materials and set them as the shader resources and samplers
+                    m_immediateContext->PSSetShaderResources(0, 1, iRenderable->second->GetMaterial(iMaterial).pDiffuse->GetTextureResourceView().GetAddressOf());
+                    m_immediateContext->PSSetSamplers(0, 1, iRenderable->second->GetMaterial(iMaterial).pDiffuse->GetSamplerState().GetAddressOf());
+                    //draw them by their respective indices, base index, and base vertex
+                    m_immediateContext->DrawIndexed(iRenderable->second->GetMesh(i).uNumIndices, iRenderable->second->GetMesh(i).uBaseIndex, iRenderable->second->GetMesh(i).uBaseVertex);
+                }
+            }
+            else
+            {
+                // draw
+                m_immediateContext->DrawIndexed(iRenderable->second->GetNumIndices(), 0, 0);
+            }
             
-            // draw
-            m_immediateContext->DrawIndexed(iRenderable->second->GetNumIndices(), 0, 0);
         }
         // present the information rendered to the back buffer to the front buffer
         m_swapChain->Present(0, 0);

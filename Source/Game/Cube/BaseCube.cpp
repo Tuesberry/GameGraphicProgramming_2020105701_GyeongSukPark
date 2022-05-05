@@ -3,19 +3,6 @@
 /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
   Method:   BaseCube::BaseCube
   Summary:  Constructor
-  Args:     const std::filesystem::path& textureFilePath
-              Path to the texture to use
-M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-/*--------------------------------------------------------------------
-  TODO: BaseCube::BaseCube definition (remove the comment)
---------------------------------------------------------------------*/
-BaseCube::BaseCube(const std::filesystem::path& textureFilePath)
-    :Renderable(textureFilePath)
-{
-}
-/*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-  Method:   BaseCube::BaseCube
-  Summary:  Constructor
   Args:     const XMFLOAT4& outputColor
               Default color of the cube
 M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
