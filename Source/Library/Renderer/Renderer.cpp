@@ -559,15 +559,7 @@ namespace library
             m_immediateContext->PSSetConstantBuffers(0, 1, m_camera.GetConstantBuffer().GetAddressOf());
             m_immediateContext->PSSetConstantBuffers(2, 1, iRenderable->second->GetConstantBuffer().GetAddressOf());
             m_immediateContext->PSSetShader(iRenderable->second->GetPixelShader().Get(), nullptr, 0);
-            /*
-            if (iRenderable->second->HasTexture())
-            {
-                // set texture resource view
-                m_immediateContext->PSSetShaderResources(0, 1, iRenderable->second->GetTextureResourceView().GetAddressOf());
-                // set sampler state
-                m_immediateContext->PSSetSamplers(0, 1, iRenderable->second->GetSamplerState().GetAddressOf());
-            }
-            */
+
             if (iRenderable->second->HasTexture())
             {
                 // for each meshes
