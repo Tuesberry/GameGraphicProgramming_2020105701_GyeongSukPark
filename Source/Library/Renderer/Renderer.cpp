@@ -2,6 +2,7 @@
 
 namespace library
 {
+
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderer::Renderer
       Summary:  Constructor
@@ -28,14 +29,17 @@ namespace library
         , m_depthStencil(nullptr)
         , m_depthStencilView(nullptr)
         , m_cbChangeOnResize(nullptr)
-        , m_projection(XMMatrixIdentity())
-        , m_camera(XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f))
-        , m_renderables(std::unordered_map<std::wstring, std::shared_ptr<Renderable>>())
-        , m_vertexShaders(std::unordered_map<std::wstring, std::shared_ptr<VertexShader>>())
-        , m_pixelShaders(std::unordered_map<std::wstring, std::shared_ptr<PixelShader>>())
-        , m_aPointLights{}
         , m_cbLights(nullptr)
         , m_pszMainSceneName()
+        , m_padding()
+        , m_camera(XMVectorSet(0.0f, 1.0f, -5.0f, 0.0f))
+        , m_projection(XMMatrixIdentity())
+        , m_aPointLights{}
+        , m_renderables(std::unordered_map<PCWSTR, std::shared_ptr<Renderable>>())
+        , m_models(std::unordered_map<PCWSTR, std::shared_ptr<Model>>())
+        , m_vertexShaders(std::unordered_map<PCWSTR, std::shared_ptr<VertexShader>>())
+        , m_pixelShaders(std::unordered_map<PCWSTR, std::shared_ptr<PixelShader>>())
+        , m_scenes(std::unordered_map<std::wstring, std::shared_ptr<Scene>>())
     {
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
@@ -46,7 +50,7 @@ namespace library
       Modifies: [m_d3dDevice, m_featureLevel, m_immediateContext,
                  m_d3dDevice1, m_immediateContext1, m_swapChain1,
                  m_swapChain, m_renderTargetView, m_cbChangeOnResize,
-                 m_projection, m_camera, m_vertexShaders,
+                 m_projection, m_cbLights, m_camera, m_vertexShaders,
                  m_pixelShaders, m_renderables].
       Returns:  HRESULT
                   Status code
@@ -299,6 +303,26 @@ namespace library
             }
         }
 
+        // initialize scene
+        for (auto iScene = m_scenes.begin(); iScene != m_scenes.end(); iScene++)
+        {
+            hr = iScene->second->Initialize(m_d3dDevice.Get(), m_immediateContext.Get());
+            if (FAILED(hr))
+            {
+                return hr;
+            }
+        }
+
+        // initialize models
+        for (auto iModel = m_models.begin(); iModel != m_models.end(); iModel++)
+        {
+            hr = iModel->second->Initialize(m_d3dDevice.Get(), m_immediateContext.Get());
+            if (FAILED(hr))
+            {
+                return hr;
+            }
+        }
+
         // Set primitive topology
         m_immediateContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -350,15 +374,6 @@ namespace library
         m_immediateContext->UpdateSubresource(m_cbChangeOnResize.Get(), 0, nullptr, &cbProjection, 0, 0);
 
 
-        // initialize scene
-        for (auto iScene = m_scenes.begin(); iScene != m_scenes.end(); iScene++)
-        {
-            hr = iScene->second->Initialize(m_d3dDevice.Get(), m_immediateContext.Get());
-            if (FAILED(hr))
-            {
-                return hr;
-            }
-        }
         return S_OK;
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
@@ -492,6 +507,29 @@ namespace library
         return S_OK;
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+      Method:   Renderer::AddModel
+      Summary:  Add a model object
+      Args:     PCWSTR pszModelName
+                  Key of the model object
+                const std::shared_ptr<Model>& pModel
+                  Shared pointer to the model object
+      Modifies: [m_models].
+      Returns:  HRESULT
+                  Status code.
+    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    /*--------------------------------------------------------------------
+      TODO: Renderer::AddModel definition (remove the comment)
+    --------------------------------------------------------------------*/
+    HRESULT Renderer::AddModel(_In_ PCWSTR pszModelName, _In_ const std::shared_ptr<Model>& pModel)
+    {
+        if (m_models.find(pszModelName) != m_models.end())
+        {
+            return E_FAIL;
+        }
+        m_models.insert(std::make_pair(pszModelName, pModel));
+        return S_OK;
+    }
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderer::SetMainScene
       Summary:  Set the main scene
       Args:     PCWSTR pszSceneName
@@ -530,7 +568,7 @@ namespace library
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
       Method:   Renderer::Update
-      Summary:  Update the renderables each frame
+      Summary:  Update the renderables and models each frame
       Args:     FLOAT deltaTime
                   Time difference of a frame
     M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
@@ -543,6 +581,11 @@ namespace library
         for (auto iRenderable = m_renderables.begin(); iRenderable != m_renderables.end(); iRenderable++)
         {
             iRenderable->second->Update(deltaTime);
+        }
+        // update the models
+        for (auto iModel = m_models.begin(); iModel != m_models.end(); iModel++)
+        {
+            iModel->second->Update(deltaTime);
         }
         // update the lights
         for (auto light : m_aPointLights)
@@ -633,10 +676,10 @@ namespace library
                 // draw
                 m_immediateContext->DrawIndexed(iRenderable->second->GetNumIndices(), 0, 0);
             }
-            
+
         }
         // Render the voxels of the main scene
-        std::unordered_map<std::wstring, std::shared_ptr<Scene>>::const_iterator mainScene = m_scenes.find(m_pszMainSceneName);        
+        std::unordered_map<std::wstring, std::shared_ptr<Scene>>::const_iterator mainScene = m_scenes.find(m_pszMainSceneName);
         for (auto iVoxel = mainScene->second->GetVoxels().begin(); iVoxel != mainScene->second->GetVoxels().end(); ++iVoxel)
         {
             // set the vertexbuffer and indexbuffer
@@ -667,27 +710,89 @@ namespace library
             // draw indexed instanced
             m_immediateContext->DrawIndexedInstanced(iVoxel->get()->GetNumIndices(), iVoxel->get()->GetNumInstances(), 0, 0, 0);
         }
+        // render the models, after voxels
+        for (auto iModel = m_models.begin(); iModel != m_models.end(); iModel++)
+        {
+            // set the vertex buffer
+            UINT aStrides[2] = {
+                static_cast<UINT>(sizeof(SimpleVertex)),
+                static_cast<UINT>(sizeof(AnimationData))
+            };
+            UINT aOffsets[2] = { 0u,0u };
+            ID3D11Buffer* aBuffers[2]
+            {
+                iModel->second->GetVertexBuffer().Get(),
+                iModel->second->GetAnimationBuffer().Get()
+            };
+            m_immediateContext->IASetVertexBuffers(0, 2, aBuffers, aStrides, aOffsets);
+            // set index buffer
+            m_immediateContext->IASetIndexBuffer(iModel->second->GetIndexBuffer().Get(), DXGI_FORMAT_R16_UINT, 0);
+            // set input layout
+            m_immediateContext->IASetInputLayout(iModel->second->GetVertexLayout().Get());
+            // update the renderable constant buffer 
+            CBChangesEveryFrame cbWorld = {
+                .World = XMMatrixTranspose(iModel->second->GetWorldMatrix()),
+                .OutputColor = iModel->second->GetOutputColor()
+            };
+            m_immediateContext->UpdateSubresource(iModel->second->GetConstantBuffer().Get(), 0, nullptr, &cbWorld, 0, 0);
+            // update the cbskinning buffer
+            CBSkinning cbSkinning = {};
+            for (UINT i = 0; i < iModel->second->GetBoneTransforms().size(); ++i)
+            {
+                cbSkinning.BoneTransforms[i] = XMMatrixTranspose(iModel->second->GetBoneTransforms()[i]);
+            }
+            m_immediateContext->UpdateSubresource(iModel->second->GetSkinningConstantBuffer().Get(), 0, nullptr, &cbSkinning, 0, 0);
+            // set shaders and constant buffer
+            m_immediateContext->VSSetShader(iModel->second->GetVertexShader().Get(), nullptr, 0);
+            m_immediateContext->VSSetConstantBuffers(0, 1, m_camera.GetConstantBuffer().GetAddressOf());
+            m_immediateContext->VSSetConstantBuffers(1, 1, m_cbChangeOnResize.GetAddressOf());
+            m_immediateContext->VSSetConstantBuffers(2, 1, iModel->second->GetConstantBuffer().GetAddressOf());
+            m_immediateContext->VSSetConstantBuffers(4, 1, iModel->second->GetSkinningConstantBuffer().GetAddressOf());
+            m_immediateContext->PSSetConstantBuffers(3, 1, m_cbLights.GetAddressOf());
+            m_immediateContext->PSSetConstantBuffers(0, 1, m_camera.GetConstantBuffer().GetAddressOf());
+            m_immediateContext->PSSetConstantBuffers(2, 1, iModel->second->GetConstantBuffer().GetAddressOf());
+            m_immediateContext->PSSetShader(iModel->second->GetPixelShader().Get(), nullptr, 0);    
+            
+            if (iModel->second->HasTexture())
+            {
+                // for each meshes
+                for (UINT i = 0u; i < iModel->second->GetNumMeshes(); ++i)
+                {
+                    UINT iMaterial = iModel->second->GetMesh(i).uMaterialIndex;
+                    //get the materials and set them as the shader resources and samplers
+                    m_immediateContext->PSSetShaderResources(0, 1, iModel->second->GetMaterial(iMaterial).pDiffuse->GetTextureResourceView().GetAddressOf());
+                    m_immediateContext->PSSetSamplers(0, 1, iModel->second->GetMaterial(iMaterial).pDiffuse->GetSamplerState().GetAddressOf());
+                    //draw them by their respective indices, base index, and base vertex
+                    m_immediateContext->DrawIndexed(iModel->second->GetMesh(i).uNumIndices, iModel->second->GetMesh(i).uBaseIndex, iModel->second->GetMesh(i).uBaseVertex);
+                }
+            }
+            else
+            {
+                // draw
+                m_immediateContext->DrawIndexed(iModel->second->GetNumIndices(), 0, 0);
+            }
+        }
         // present the information rendered to the back buffer to the front buffer
         m_swapChain->Present(0, 0);
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
-      Method:   Renderer::SetVertexShaderOfRenderable
-      Summary:  Sets the vertex shader for a renderable
-      Args:     PCWSTR pszRenderableName
-                  Key of the renderable
-                PCWSTR pszVertexShaderName
-                  Key of the vertex shader
-      Modifies: [m_renderables].
-      Returns:  HRESULT
-                  Status code
-    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
-    /*--------------------------------------------------------------------
-      TODO: Renderer::SetVertexShaderOfRenderable definition (remove the comment)
-    --------------------------------------------------------------------*/
+       Method:   Renderer::SetVertexShaderOfRenderable
+       Summary:  Sets the vertex shader for a renderable
+       Args:     PCWSTR pszRenderableName
+                   Key of the renderable
+                 PCWSTR pszVertexShaderName
+                   Key of the vertex shader
+       Modifies: [m_renderables].
+       Returns:  HRESULT
+                   Status code
+     M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+     /*--------------------------------------------------------------------
+       TODO: Renderer::SetVertexShaderOfRenderable definition (remove the comment)
+     --------------------------------------------------------------------*/
     HRESULT Renderer::SetVertexShaderOfRenderable(_In_ PCWSTR pszRenderableName, _In_ PCWSTR pszVertexShaderName)
     {
-        std::unordered_map<std::wstring, std::shared_ptr<Renderable>>::const_iterator iRenderable = m_renderables.find(pszRenderableName);
-        std::unordered_map<std::wstring, std::shared_ptr<VertexShader>>::const_iterator iVertexShader = m_vertexShaders.find(pszVertexShaderName);
+        std::unordered_map<PCWSTR, std::shared_ptr<Renderable>>::const_iterator iRenderable = m_renderables.find(pszRenderableName);
+        std::unordered_map<PCWSTR, std::shared_ptr<VertexShader>>::const_iterator iVertexShader = m_vertexShaders.find(pszVertexShaderName);
 
         if (iRenderable == m_renderables.end() || iVertexShader == m_vertexShaders.end())
         {
@@ -714,8 +819,8 @@ namespace library
     --------------------------------------------------------------------*/
     HRESULT Renderer::SetPixelShaderOfRenderable(_In_ PCWSTR pszRenderableName, _In_ PCWSTR pszPixelShaderName)
     {
-        std::unordered_map<std::wstring, std::shared_ptr<Renderable>>::const_iterator iRenderable = m_renderables.find(pszRenderableName);
-        std::unordered_map<std::wstring, std::shared_ptr<PixelShader>>::const_iterator iPixelShader = m_pixelShaders.find(pszPixelShaderName);
+        std::unordered_map<PCWSTR, std::shared_ptr<Renderable>>::const_iterator iRenderable = m_renderables.find(pszRenderableName);
+        std::unordered_map<PCWSTR, std::shared_ptr<PixelShader>>::const_iterator iPixelShader = m_pixelShaders.find(pszPixelShaderName);
 
         if (iRenderable == m_renderables.end() || iPixelShader == m_pixelShaders.end())
         {
@@ -743,7 +848,7 @@ namespace library
     HRESULT Renderer::SetVertexShaderOfScene(_In_ PCWSTR pszSceneName, _In_ PCWSTR pszVertexShaderName)
     {
         std::unordered_map<std::wstring, std::shared_ptr<Scene>>::const_iterator iScene = m_scenes.find(pszSceneName);
-        std::unordered_map<std::wstring, std::shared_ptr<VertexShader>>::const_iterator iVertexShader = m_vertexShaders.find(pszVertexShaderName);
+        std::unordered_map<PCWSTR, std::shared_ptr<VertexShader>>::const_iterator iVertexShader = m_vertexShaders.find(pszVertexShaderName);
 
         if (iScene == m_scenes.end() || iVertexShader == m_vertexShaders.end())
         {
@@ -774,7 +879,7 @@ namespace library
     HRESULT Renderer::SetPixelShaderOfScene(_In_ PCWSTR pszSceneName, _In_ PCWSTR pszPixelShaderName)
     {
         std::unordered_map<std::wstring, std::shared_ptr<Scene>>::const_iterator iScene = m_scenes.find(pszSceneName);
-        std::unordered_map<std::wstring, std::shared_ptr<PixelShader>>::const_iterator iPixelShader = m_pixelShaders.find(pszPixelShaderName);
+        std::unordered_map<PCWSTR, std::shared_ptr<PixelShader>>::const_iterator iPixelShader = m_pixelShaders.find(pszPixelShaderName);
 
         if (iScene == m_scenes.end() || iPixelShader == m_pixelShaders.end())
         {
@@ -785,6 +890,62 @@ namespace library
         {
             iVoxel->get()->SetPixelShader(iPixelShader->second);
         }
+
+        return S_OK;
+    }
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+      Method:   Renderer::SetVertexShaderOfModel
+      Summary:  Sets the pixel shader for a model
+      Args:     PCWSTR pszModelName
+                  Key of the model
+                PCWSTR pszVertexShaderName
+                  Key of the vertex shader
+      Modifies: [m_renderables].
+      Returns:  HRESULT
+                  Status code
+    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    /*--------------------------------------------------------------------
+      TODO: Renderer::SetVertexShaderOfModel definition (remove the comment)
+    --------------------------------------------------------------------*/
+    HRESULT Renderer::SetVertexShaderOfModel(_In_ PCWSTR pszModelName, _In_ PCWSTR pszVertexShaderName)
+    {
+        std::unordered_map<PCWSTR, std::shared_ptr<Model>>::const_iterator iModel = m_models.find(pszModelName);
+        std::unordered_map<PCWSTR, std::shared_ptr<VertexShader>>::const_iterator iVertexShader = m_vertexShaders.find(pszVertexShaderName);
+        
+        if (iModel == m_models.end() || iVertexShader == m_vertexShaders.end())
+        {
+            return E_FAIL;
+        }
+
+        iModel->second->SetVertexShader(iVertexShader->second);
+
+        return S_OK;
+    }
+    /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
+      Method:   Renderer::SetPixelShaderOfModel
+      Summary:  Sets the pixel shader for a model
+      Args:     PCWSTR pszModelName
+                  Key of the model
+                PCWSTR pszPixelShaderName
+                  Key of the pixel shader
+      Modifies: [m_renderables].
+      Returns:  HRESULT
+                  Status code
+    M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M---M-M*/
+    /*--------------------------------------------------------------------
+      TODO: Renderer::SetPixelShaderOfModel definition (remove the comment)
+    --------------------------------------------------------------------*/
+    HRESULT Renderer::SetPixelShaderOfModel(_In_ PCWSTR pszModelName, _In_ PCWSTR pszPixelShaderName)
+    {
+        std::unordered_map<PCWSTR, std::shared_ptr<Model>>::const_iterator iModel = m_models.find(pszModelName);
+        std::unordered_map<PCWSTR, std::shared_ptr<PixelShader>>::const_iterator iPixelShader = m_pixelShaders.find(pszPixelShaderName);
+
+        if (iModel == m_models.end() || iPixelShader == m_pixelShaders.end())
+        {
+            return E_FAIL;
+        }
+
+        iModel->second->SetPixelShader(iPixelShader->second);
 
         return S_OK;
     }
