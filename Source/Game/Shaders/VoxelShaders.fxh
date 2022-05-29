@@ -1,5 +1,5 @@
 //--------------------------------------------------------------------------------------
-// File: VoxelShaders.fx
+// File: VoxelShaders.fxh
 //
 // Copyright (c) Kyung Hee University.
 //--------------------------------------------------------------------------------------
@@ -10,10 +10,10 @@
 // Global Variables
 //--------------------------------------------------------------------------------------
 /*--------------------------------------------------------------------
-  TODO: Declare a diffuse texture and a sampler state (remove the comment)
+  TODO: Declare texture array and sampler state array for diffuse texture and normal texture (remove the comment)
 --------------------------------------------------------------------*/
-Texture2D txDiffuse : register(t0);
-SamplerState samLinear : register(s0);
+Texture2D aTextures[2] : register(t0);
+SamplerState aSamplers[2] : register(s0);
 //--------------------------------------------------------------------------------------
 // Constant Buffer Variables
 //--------------------------------------------------------------------------------------
@@ -42,16 +42,16 @@ cbuffer cbChangeOnResize : register(b1)
 };
 /*C+C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C
   Cbuffer:  cbChangesEveryFrame
-  Summary:  Constant buffer used for world transformation, and the 
-            color of the voxel
+  Summary:  Constant buffer used for world transformation
 C---C---C---C---C---C---C---C---C---C---C---C---C---C---C---C---C-C*/
 /*--------------------------------------------------------------------
   TODO: cbChangesEveryFrame definition (remove the comment)
---------------------------------------------------------------------*/
-cbuffer cbChangesEveryFrame : register(b2)
+//-------------------------------------------------------------------*/
+cbuffer cbChangeEveryFrame : register(b2)
 {
     matrix World;
     float4 OutputColor;
+    bool HasNormalMap;
 };
 /*C+C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C
   Cbuffer:  cbLights
@@ -65,7 +65,6 @@ cbuffer cbLights : register(b3)
     float4 LightPositions[NUM_LIGHTS];
     float4 LightColors[NUM_LIGHTS];
 };
-//--------------------------------------------------------------------------------------
 /*C+C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C
   Struct:   VS_INPUT
   Summary:  Used as the input to the vertex shader, 
@@ -79,7 +78,9 @@ struct VS_INPUT
     float4 Position : POSITION;
     float2 TexCoord : TEXCOORD0;
     float3 Normal : NORMAL;
-    row_major matrix Transform : INSTANCE_TRANSFORM;
+    float3 Tangent : TANGENT;
+    float3 Bitangent : BITANGENT;
+    row_major matrix mTransform : INSTANCE_TRANSFORM;
 };
 /*C+C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C+++C
   Struct:   PS_INPUT
@@ -92,10 +93,13 @@ C---C---C---C---C---C---C---C---C---C---C---C---C---C---C---C---C-C*/
 struct PS_INPUT
 {
     float4 Position : SV_POSITION;
-    float3 Color : COLOR;
+    float2 TexCoord : TEXCOORD;
     float3 Normal : NORMAL;
-    float4 WorldPosition : WORLDPOS;
+    float3 WorldPosition : WORLDPOS;
+    float3 Tangent : TANGENT;
+    float3 Bitangent : BITANGENT;
 };
+
 //--------------------------------------------------------------------------------------
 // Vertex Shader
 //--------------------------------------------------------------------------------------
@@ -105,20 +109,28 @@ struct PS_INPUT
 PS_INPUT VSVoxel(VS_INPUT input)
 {
     PS_INPUT output = (PS_INPUT) 0;
-    output.Position = mul(input.Position, input.Transform);
+    
+    output.Position = mul(input.Position, input.mTransform);
     output.Position = mul(output.Position, World);
     output.Position = mul(output.Position, View);
     output.Position = mul(output.Position, Projection);
     
-    output.Normal = normalize(mul(float4(input.Normal, 1), World).xyz);
+    output.Normal = normalize(mul(float4(input.Normal, 0), World).xyz);
     
-    output.WorldPosition = mul(input.Position, input.Transform);
-    output.WorldPosition = mul(output.WorldPosition, World);
+    if(HasNormalMap)
+    {
+        output.Tangent = normalize(mul(float4(input.Tangent, 0.0f), World).xyz);
+        output.Bitangent = normalize(mul(float4(input.Bitangent, 0.0f), World).xyz);
+    }
     
-    output.Color = OutputColor;
+    output.WorldPosition = mul(input.Position, input.mTransform);
+    output.WorldPosition = mul(float4(output.WorldPosition, 1), World);
+    
+    output.TexCoord = input.TexCoord;
     
     return output;
 }
+
 //--------------------------------------------------------------------------------------
 // Pixel Shader
 //--------------------------------------------------------------------------------------
@@ -127,19 +139,41 @@ PS_INPUT VSVoxel(VS_INPUT input)
 --------------------------------------------------------------------*/
 float4 PSVoxel(PS_INPUT input) : SV_Target
 {
+    float3 normal = normalize(input.Normal);
+    
+    if(HasNormalMap)
+    {
+        // sample the pixel in the normal map
+        float4 bumpMap = aTextures[1].Sample(aSamplers[1], input.TexCoord);
+
+        // expand the range of the normal value from (0,1)to(-1,1)
+        bumpMap = (bumpMap * 2.0f) - 1.0f;
+        
+        // calculate the normal from the data in the normal map
+        float3 bumpNormal = (bumpMap.x * input.Tangent) + (bumpMap.y * input.Bitangent) + (bumpMap.z * normal);
+        
+        // normalize the resulting bump normal and replace existing normal
+        normal = normalize(bumpNormal);
+    }
+    
     float3 ambient = float3(0.0f, 0.0f, 0.0f);
     float3 diffuse = float3(0.0f, 0.0f, 0.0f);
     float3 specular = float3(0.0f, 0.0f, 0.0f);
-    float3 viewDirection = normalize(CameraPosition.xyz - input.WorldPosition.xyz);
+    
+    float3 viewDirection = normalize(CameraPosition.xyz - input.WorldPosition);
+    float3 textureColor = aTextures[0].Sample(aSamplers[0], input.TexCoord);
 
     for (uint i = 0; i < NUM_LIGHTS; i++)
     {
 		// Ambient light
         ambient += float3(0.1f, 0.1f, 0.1f) * LightColors[i].xyz;
 		// diffuse light
-        float3 lightDirection = normalize(LightPositions[i].xyz - input.WorldPosition.xyz);
-        diffuse += saturate(dot(normalize(input.Normal), lightDirection) * LightColors[i].xyz);
+        float3 lightDirection = normalize(LightPositions[i].xyz - input.WorldPosition);
+        diffuse += saturate(dot(normal, lightDirection) * LightColors[i].xyz);
+		// specular light
+        float3 reflectDirection = reflect(-lightDirection, normal);
+        specular += pow(saturate(dot(reflectDirection, viewDirection)), 20.0f) * LightColors[i].xyz;
     }
-    
-    return float4((ambient + diffuse) * input.Color, 1.0f);
+
+    return float4((ambient + diffuse + specular) * textureColor, 1.0f);
 }

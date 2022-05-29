@@ -37,12 +37,6 @@ namespace library
         XMMATRIX Projection;
     };
 
-    struct CBChangesEveryFrame
-    {
-        XMMATRIX World;
-        XMFLOAT4 OutputColor;
-    };
-
     struct CBSkinning
     {
         XMMATRIX BoneTransforms[MAX_NUM_BONES];
@@ -53,5 +47,28 @@ namespace library
         XMFLOAT4 LightPositions[NUM_LIGHTS];
         XMFLOAT4 LightColors[NUM_LIGHTS];
     };
+
+    /*S+S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S
+      Struct:   NormalData
+      Summary:  NormalData structure containing tangent space vetors
+                of the vertex
+    S---S---S---S---S---S---S---S---S---S---S---S---S---S---S---S---S-S*/
+    struct NormalData
+    {
+        XMFLOAT3 Tangent;
+        XMFLOAT3 Bitangent;
+    };
+
+    /*S+S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S+++S
+      Struct:   CBChangesEveryFrame
+      Summary:  Constant buffer containing world matrix
+    S---S---S---S---S---S---S---S---S---S---S---S---S---S---S---S---S-S*/
+    struct CBChangesEveryFrame
+    {
+        XMMATRIX World;
+        XMFLOAT4 OutputColor;
+        BOOL HasNormalMap;
+    };
+
 
 }

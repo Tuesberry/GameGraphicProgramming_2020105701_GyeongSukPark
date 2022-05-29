@@ -46,11 +46,14 @@ namespace library
     /*--------------------------------------------------------------------
       TODO: Voxel::Initialize definition (remove the comment)
     --------------------------------------------------------------------*/
-    HRESULT Voxel::Initialize(_In_ ID3D11Device* pDevice, _In_ ID3D11DeviceContext* pImmediateContext) 
+    HRESULT Voxel::Initialize(_In_ ID3D11Device* pDevice, _In_ ID3D11DeviceContext* pImmediateContext)
     {
-        HRESULT hr = S_OK;
+        BasicMeshEntry basicMeshEntry;
+        basicMeshEntry.uNumIndices = NUM_INDICES;
 
-        hr = initialize(pDevice, pImmediateContext);
+        m_aMeshes.push_back(basicMeshEntry);
+
+        HRESULT hr = initialize(pDevice, pImmediateContext);
         if (FAILED(hr))
         {
             return hr;
@@ -62,7 +65,16 @@ namespace library
             return hr;
         }
 
-        return hr;
+        if (HasTexture() > 0)
+        {
+            hr = SetMaterialOfMesh(0, 0);
+            if (FAILED(hr))
+            {
+                return hr;
+            }
+        }
+
+        return S_OK;
     }
 
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
