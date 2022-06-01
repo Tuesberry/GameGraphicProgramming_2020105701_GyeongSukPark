@@ -771,7 +771,10 @@ namespace library
             m_immediateContext->PSSetConstantBuffers(0, 1, m_cbShadowMatrix.GetAddressOf());
             m_immediateContext->PSSetShader(m_shadowPixelShader->GetPixelShader().Get(), nullptr, 0);
             // draw
-            m_immediateContext->DrawIndexedInstanced(iVoxel->GetNumIndices(), iVoxel->GetNumInstances(), 0, 0, 0);
+            for (UINT i = 0u; i < iVoxel->GetNumMeshes(); ++i)
+            {
+                m_immediateContext->DrawIndexed(iVoxel->GetMesh(i).uNumIndices, iVoxel->GetMesh(i).uBaseIndex, iVoxel->GetMesh(i).uBaseVertex);
+            }
         }
 
         // rendering model
