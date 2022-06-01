@@ -78,5 +78,8 @@
     <None Include="Shaders\SkinningShaders.fxh">
       <Filter>Source Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\ShadowShaders.fxh">
+      <Filter>Source Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

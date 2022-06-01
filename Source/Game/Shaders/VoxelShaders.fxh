@@ -14,6 +14,9 @@
 --------------------------------------------------------------------*/
 Texture2D aTextures[2] : register(t0);
 SamplerState aSamplers[2] : register(s0);
+
+Texture2D shadowMapTexture : register(t2);
+SamplerState shadowMapSampler : register(s2);
 //--------------------------------------------------------------------------------------
 // Constant Buffer Variables
 //--------------------------------------------------------------------------------------
