@@ -743,16 +743,11 @@ namespace library
         for (auto iVoxel : m_scenes[m_pszMainSceneName]->GetVoxels())
         {
             // set the buffers
-            UINT aStrides[2] = {
-                static_cast<UINT>(sizeof(SimpleVertex)),
-                static_cast<UINT>(sizeof(InstanceData))
-            };
-            UINT aOffsets[2] = { 0u,0u };
-            ComPtr<ID3D11Buffer> aBuffers[2]{
-                iVoxel->GetVertexBuffer().Get(),
-                iVoxel->GetInstanceBuffer().Get()
-            };
-            m_immediateContext->IASetVertexBuffers(0, 1, aBuffers->GetAddressOf(), aStrides, aOffsets);
+            UINT uStride = sizeof(SimpleVertex);
+            UINT uOffset = 0;
+            m_immediateContext->IASetVertexBuffers(0, 1, iVoxel->GetVertexBuffer().GetAddressOf(), &uStride, &uOffset);
+            UINT uStrideInstance = sizeof(InstanceData);
+            m_immediateContext->IASetVertexBuffers(2, 1, iVoxel->GetIndexBuffer().GetAddressOf(), &uStrideInstance, &uOffset);
             // index buffer
             m_immediateContext->IASetIndexBuffer(iVoxel->GetIndexBuffer().Get(), DXGI_FORMAT_R16_UINT, 0);
             // set the input layout
@@ -810,6 +805,11 @@ namespace library
 
         // reset the render target to the original back buffer
         m_immediateContext->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
+        /*
+        ComPtr<ID3D11ShaderResourceView> const pSRV2[2] = { NULL, NULL };
+        m_immediateContext->PSSetShaderResources(0, 2, pSRV2->GetAddressOf());
+        m_immediateContext->PSSetShaderResources(2, 1, pSRV2->GetAddressOf());
+        */
     }
     /*M+M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M+++M
      Method:   Renderer::GetDriverType

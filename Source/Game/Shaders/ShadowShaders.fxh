@@ -19,6 +19,8 @@ cbuffer cbShadowMatrix : register(b0)
 struct VS_SHADOW_INPUT
 {
 	float4 Position : POSITION;
+    float2 TexCoord : TEXCOORD0;
+    float3 Normal : NORMAL;
     row_major matrix mTransform : INSTANCE_TRANSFORM;
 };
 
